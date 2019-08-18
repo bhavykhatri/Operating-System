@@ -19,3 +19,9 @@ by running
 ./part2 $ Kanpur IITK output.txt sort
 ./part2 @ Kanpur IITK
 ```
+
+### Part 3: Directory Size
+
+In this problem we have to find directory size in bytes which is the sum of size of all the files and sub directories. This must be implemented by creating a separate process for all the sub directories. Obviously, not any linux command and temporary file should be used. Size of subdirectory which  include sum of all files and directories as well sub directories can be computed recursively.
+
+Run `./part3 <directory_path>`
