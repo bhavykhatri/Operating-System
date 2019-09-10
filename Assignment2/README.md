@@ -70,5 +70,15 @@ We imitated the behavior of linux system call, so for more details on them refer
   - Whenever child process gets created which is the copy of its parent process that is inherit all the register, file descriptor which are there in parent.
   - Task was to increase the reference count by 1 for every file object. For `exit` system call it is just opposite.
 
+## Things I learnt
+
+This was a challenging assignment that is why I loved this one the most. Challenges always lead to learning new things and this was no different. Some of the new skills that I added to my arsenal were
+
+- Writing test cases and appreciating their importance
+  - It may happen that you added new functionality and then test that were running fine now stopped working. Maintaing a folder specifically for test cases can come to a rescue in such situation.
+
+- Understanding the large code base
+  - Understanding code that was not written by you is very good skill to have. Sometimes 
+
 ## References
 Since readme doesn't include inuition of the concepts, please refer to the book OS: Three easy pieces book for understanding system calls in more detail.
