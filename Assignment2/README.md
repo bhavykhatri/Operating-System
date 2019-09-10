@@ -1,5 +1,12 @@
 Please refer to the documentation directory for details regarding the assignment.
 Source code is in "src" directory
+## General Template for readme
+
+1. What this project is about, what it does?
+2. How to set up this project?
+3. What is your goal?
+4. How did you achieve that goal? What are the main functions that you implemented?
+5. Things that you learnt...
 
 ## Installation and Requirements
 Code require gem5 which is hardware simulator. For installation process refer to documentation folder for more details.
@@ -54,5 +61,14 @@ We imitated the behavior of linux system call, so for more details on them refer
 4. `pipe`
   - takes an array of integer for file descriptor, it then fills the number with free file descriptor indices and creates a read and write file object which is pointed by each of them. Both of the file descriptor then points to the pipe object instead of inode object.
   - Implementation includes 3 functions for creating a pipe object, reading from pipe buffer into buffer and writing from buffer into pipe buffer.
+
+5. `close`
+  - Closing the file that is pointing file descriptor towards null. Also if no file descriptor is pointing towards a file object then freeing that file object. Check for knowing how many file descriptor points toward this file object is done by maintaing a field reference count for every file object. Similarly for pipe too.
+  - argument file descriptor
+
+6. `fork`
+  - Whenever child process gets created which is the copy of its parent process that is inherit all the register, file descriptor which are there in parent.
+  - Task was to increase the reference count by 1 for every file object. For `exit` system call it is just opposite.
+
 ## References
 Since readme doesn't include inuition of the concepts, please refer to the book OS: Three easy pieces book for understanding system calls in more detail.
