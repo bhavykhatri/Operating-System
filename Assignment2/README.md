@@ -52,6 +52,7 @@ We imitated the behavior of linux system call, so for more details on them refer
   - returns 1 on success 0 otherwise
 
 4. `pipe`
+  - takes an array of integer for file descriptor, it then fills the number with free file descriptor indices and creates a read and write file object which is pointed by each of them. Both of the file descriptor then points to the pipe object instead of inode object.
   - Implementation includes 3 functions for creating a pipe object, reading from pipe buffer into buffer and writing from buffer into pipe buffer.
 ## References
 Since readme doesn't include inuition of the concepts, please refer to the book OS: Three easy pieces book for understanding system calls in more detail.
