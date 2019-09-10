@@ -74,16 +74,19 @@ int pipe_read(struct file *filep, char *buff, u32 count)
       * check file pointer is not null
       * check that the file object has write permission and is of type pipe.
     */
-    printk("Pipe read called\n" );
 
     int read_bytes = -EINVAL;
 
     if(filep != NULL && filep->type == PIPE && filep->mode == O_READ){
+
       read_bytes = 0;
       struct pipe_info* pipep = filep->pipe;
 
       int remaining_char = pipep->buffer_offset - pipep->read_pos;
-      int n_iter = remaining_char<count -1?remaining_char:count -1;
+      int n_iter = remaining_char<count ?remaining_char:count ;
+
+
+
       for(int i = 0; i<n_iter; i++){
         buff[i] = pipep->pipe_buff[pipep->read_pos];
         pipep->read_pos++;
@@ -91,7 +94,7 @@ int pipe_read(struct file *filep, char *buff, u32 count)
       }
       buff[n_iter] = '\0';
 
-      printk("read  buffer %s\n", buff);
+
     }
     return read_bytes;
 }
@@ -113,7 +116,7 @@ int pipe_write(struct file *filep, char *buff, u32 count)
       * check that the file object has write permission and is of type pipe.
     *
     */
-printk("Pipe write called\n" );
+
     int written_bytes = -EINVAL;
     if(filep != NULL && filep->type == PIPE && filep->mode == O_WRITE){
       written_bytes = 0;
@@ -127,9 +130,10 @@ printk("Pipe write called\n" );
 
         written_bytes +=1;
       }
+      
       pipep->pipe_buff[pipep->write_pos] = '\0';
 
-      printk("write pipe buffer %s\n", pipep->pipe_buff);
+
     }
     return written_bytes;
 }
@@ -158,7 +162,7 @@ int create_pipe(struct exec_context *current, int *fd)
 
     ToDo error handling remaining.
     */
-    printk("Pipe create called\n" );
+
     int success = 0;
 
 
@@ -210,7 +214,7 @@ int create_pipe(struct exec_context *current, int *fd)
     read_filep->fops->close = generic_close;
     write_filep->fops->close = generic_close;
 
-    printk("Pipe create exited\n" );
+
     return success;
 }
 

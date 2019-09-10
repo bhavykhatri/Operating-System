@@ -7,7 +7,7 @@
 #include<memory.h>
 #include<fs.h>
 #include<kbd.h>
-
+#include<pipe.h>
 
 
 /************************************************************************************/
@@ -97,6 +97,11 @@ void decimal_to_binary(int n, int *array){
 void do_file_fork(struct exec_context *child)
 {
    /*TODO the child fds are a copy of the parent. Adjust the refcount*/
+   for(int i = 0; i<MAX_OPEN_FILES; i++){
+     if(child->files[i] != NULL){
+       child->files[i]->ref_count +=1;
+     }
+   }
 
 }
 
@@ -104,8 +109,48 @@ void do_file_exit(struct exec_context *ctx)
 {
    /*TODO the process is exiting. Adjust the ref_count
      of files*/
+     for(int i = 0; i<MAX_OPEN_FILES; i++){
+       if(ctx->files[i] != NULL){
+         ctx->files[i]->ref_count -=1;
+       }
+     }
 }
 
+void close_pipe(struct file* filep){
+  int file_mode = filep->mode;
+  switch (file_mode) {
+    case O_READ:
+    {
+      filep->pipe->is_ropen = 0;
+      // if(filep->pipe->is_wopen = 0){
+      //   free_pipe_info(filep->pipe);
+      // }
+      // filep->pipe = NULL;
+
+      filep->ref_count -=1;
+      if(filep->ref_count == 0){
+        free_file_object(filep);
+      }
+      break;
+    }
+    case O_WRITE:
+    {
+      filep->pipe->is_wopen = 0;
+      // if(filep->pipe->is_ropen = 0){
+      //   free_pipe_info(filep->pipe);
+      // }
+      //
+      // filep->pipe = NULL;
+
+      filep->ref_count -=1;
+      if(filep->ref_count == 0){
+        free_file_object(filep);
+      }
+
+      break;
+    }
+  }
+}
 long generic_close(struct file *filep)
 {
   /** TODO Implementation of close (pipe, file) based on the type
@@ -120,6 +165,7 @@ long generic_close(struct file *filep)
 
     switch (filep->type) {
       case REGULAR:
+      {
         success_close = 0;
         filep->ref_count -=1;
 
@@ -133,11 +179,16 @@ long generic_close(struct file *filep)
 
         }
         break;
+      }
       case PIPE:
+      {
+        printk("Generic close pipe called\n");
+        close_pipe(filep);
 
         success_close = 0;
 
         break;
+      }
     }
 
 
@@ -222,7 +273,7 @@ static long do_lseek_regular(struct file *filep, long offset, int whence)
         filep->offp += (u32) offset;
         ret_offset = (long int) filep->offp;
         break;
-      case SEEK_END:
+      case (int)SEEK_END:
         ;
         filep->offp = (u32) offset + filep->inode->file_size;
         ret_offset = (long int) filep->offp;
@@ -351,8 +402,32 @@ extern int do_regular_file_open(struct exec_context *ctx, char* filename, u64 fl
         struct inode* file_inode = create_inode(filename, mode);
         //file already exists
         if(file_inode == NULL){
-          ret_fd = -EINVAL;
-          break;
+          ;
+          struct inode* file_lookup_inode = lookup_inode(filename);
+          //file doesn't exist
+          if(file_lookup_inode == NULL){
+            ret_fd = -EINVAL;
+            break;
+          }
+          //file exists
+          else{
+
+            struct file *filep = alloc_file();
+            filep = create_regular_file(filep, flags);
+
+            if(!check_file_permission(filep, file_lookup_inode)){
+              ret_fd = -EACCES;
+              break;
+            }
+
+            filep->inode = file_lookup_inode;
+
+            filep->ref_count++;
+            ret_fd = find_free_fd(ctx);
+            ctx->files[ret_fd] = filep;
+          }
+          // ret_fd = -EINVAL;
+          // break;
         }
         //file successfully created
         else{
