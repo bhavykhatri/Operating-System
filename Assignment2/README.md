@@ -70,7 +70,7 @@ We imitated the behavior of linux system call, so for more details on them refer
   - Whenever child process gets created which is the copy of its parent process that is inherit all the register, file descriptor which are there in parent.
   - Task was to increase the reference count by 1 for every file object. For `exit` system call it is just opposite.
 
-## Things I learnt
+## Things I learnt.....
 
 This was a challenging assignment that is why I loved this one the most. Challenges always lead to learning new things and this was no different. Some of the new skills that I added to my arsenal were
 
@@ -78,7 +78,12 @@ This was a challenging assignment that is why I loved this one the most. Challen
   - It may happen that you added new functionality and then test that were running fine now stopped working. Maintaing a folder specifically for test cases can come to a rescue in such situation.
 
 - Understanding the large code base
-  - Understanding code that was not written by you is very good skill to have. Sometimes 
+  - Understanding code that was not written by you is very good skill to have. The most difficult question to answer is where to start, since the code can be as long as thousand lines. The answer to that would be to divide the bigger problem into much smaller problems. For e.g. okay you are implementing syscall but what part of syscall you are implementing. Understanding every function and its behavior is difficult so next question is which function to look first. I would suggest to have a conceptual view/ mental model in your mind and then finding parallel concept in code.
+- Debugging code
+  - By having a test case in mind you see that what is the behavior tha tyou were expecting and what behavior you are actually getting. After that you debug it by using gdb or printf that where exactly the control is moving sometimes you might find that it is not moving inside the function or if statement because it is not satisfying certain conditions.
+- Learning new concepts making a strategy and asking right questions
+  - The question of "how to learn new concepts?" is an age old question. Since world is changing very fast you cann't learn everything fully there is something which will remain unknown and unexplored. But the task is not to learn everything but somethings which are most important which lays the basis on which all other things are built upon. For e.g. when you start learning operating system you just don't go and start reading every system call that are there. This would just be plainly stupid. But the next question that comes to my mind is then what is the solution. The solution is by making a strategy, for e.g asking questions in correct order. First what, why, why  not something else and then if necessary moving to the how part. 
+- Ideas are more important than tools
 
 ## References
 Since readme doesn't include inuition of the concepts, please refer to the book OS: Three easy pieces book for understanding system calls in more detail.
