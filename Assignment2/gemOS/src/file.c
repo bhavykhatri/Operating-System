@@ -265,18 +265,44 @@ static long do_lseek_regular(struct file *filep, long offset, int whence)
     long int ret_offset = -EINVAL;
     switch (whence) {
       case (int)SEEK_SET:
+      {
         ;
-        filep->offp = (u32) offset;
-        ret_offset = (long int) filep->offp;
+        if(offset >= 0){
+          filep->offp = (u32) offset;
+          ret_offset = (long int) filep->offp;
+        }
+        else{
+          ret_offset = -EINVAL;
+          break;
+        }
         break;
-      case (int)SEEK_CUR:
+      }
+      case (int)SEEK_CUR:{
+        u32 older_offset = filep->offp;
         filep->offp += (u32) offset;
-        ret_offset = (long int) filep->offp;
+        if((int)filep->offp>=0){
+          ret_offset = (long int) filep->offp;
+        }
+        else{
+          filep->offp = older_offset;
+          ret_offset = -EINVAL;
+          break;
+        }
+
         break;
+      }
       case (int)SEEK_END:
         ;
+        u32 older_offset = filep->offp;
         filep->offp = (u32) offset + filep->inode->file_size;
-        ret_offset = (long int) filep->offp;
+        if((int)filep->offp>=0){
+          ret_offset = (long int) filep->offp;
+        }
+        else{
+          filep->offp = older_offset;
+          ret_offset = -EINVAL;
+          break;
+        }
         break;
     }
     return ret_offset;
