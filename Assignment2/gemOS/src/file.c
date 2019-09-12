@@ -182,7 +182,7 @@ long generic_close(struct file *filep)
       }
       case PIPE:
       {
-        printk("Generic close pipe called\n");
+
         close_pipe(filep);
 
         success_close = 0;
@@ -202,7 +202,7 @@ static int do_read_regular(struct file *filep, char * buff, u32 count)
     *  Validate the permission, file existence, Max length etc
     *  Incase of Error return valid Error code
     * */
-    printk("File read called\n" );
+
     int read_bytes = 0;
     if(filep != NULL){
         int array[4] = {0, 0, 0, 0};
@@ -214,9 +214,15 @@ static int do_read_regular(struct file *filep, char * buff, u32 count)
 
         if(is_read){
           int offset = (int)filep->offp;
+          if(offset + (int)count >4*1024){
+            // printk("Memory read error\n" );
+            return -ENOMEM;
+          }
+          else{
           read_bytes = flat_read(filep->inode, buff, (int)count, &offset);
 
           filep->offp = (u32)offset;
+          }
         }
         else{
           read_bytes = -EACCES;
@@ -246,8 +252,14 @@ static int do_write_regular(struct file *filep, char * buff, u32 count)
 
         if(is_write){
           int offset = (int)filep->offp;
-          written_bytes = flat_write(filep->inode, buff, (int)count, &offset);
-          filep->offp += (u32)written_bytes;
+          if(offset + (int)count >4*1024){
+            // printk("Memory write error\n" );
+            return -ENOMEM;
+          }
+          else{
+            written_bytes = flat_write(filep->inode, buff, (int)count, &offset);
+            filep->offp += (u32)written_bytes;
+          }
         }
         else{
           written_bytes = -EACCES;
@@ -460,9 +472,9 @@ extern int do_regular_file_open(struct exec_context *ctx, char* filename, u64 fl
           struct file *filep = alloc_file();
           filep = create_regular_file(filep, flags&7);
 
-          // printk("File object mode %u\n", filep->mode);
+
           filep->inode = file_inode;
-          // printk("File Inode mode %u\n", file_inode->mode);
+
 
           filep->ref_count++;
           ret_fd = find_free_fd(ctx);
@@ -577,4 +589,3 @@ int fd_dup2(struct exec_context *current, int oldfd, int newfd)
 
     return ret_fd;
 }
-

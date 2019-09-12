@@ -44,6 +44,14 @@ int find_free_fd_pipe(struct exec_context *ctx){
   return fd;
 }
 
+void free_file_object_2(struct file *filep)
+{
+    if(filep)
+    {
+       os_page_free(OS_DS_REG ,filep);
+       stats->file_objects--;
+    }
+}
 
 long pipe_close(struct file *filep)
 {
@@ -52,7 +60,7 @@ long pipe_close(struct file *filep)
     * Free the pipe_info and file object
     * Incase of Error return valid Error code
     */
-    printk("Pipe close called\n" );
+
     int ret_fd = -EINVAL;
     return ret_fd;
 }
@@ -77,10 +85,23 @@ int pipe_read(struct file *filep, char *buff, u32 count)
 
     int read_bytes = -EINVAL;
 
+
+
     if(filep != NULL && filep->type == PIPE && filep->mode == O_READ){
 
       read_bytes = 0;
       struct pipe_info* pipep = filep->pipe;
+
+      if((int)pipep->read_pos + (int)count > 4*1024){
+        // printk("Pipe Memory read error\n" );
+        return -ENOMEM;
+      }
+
+      if((int)pipep->read_pos + (int)count > (int)pipep->write_pos){
+        // printk("Pipe Memory read error goes beyond write\n" );
+        return -ENOMEM;
+      }
+
 
       int remaining_char = pipep->buffer_offset - pipep->read_pos;
       int n_iter = remaining_char<count ?remaining_char:count ;
@@ -118,9 +139,15 @@ int pipe_write(struct file *filep, char *buff, u32 count)
     */
 
     int written_bytes = -EINVAL;
+
     if(filep != NULL && filep->type == PIPE && filep->mode == O_WRITE){
       written_bytes = 0;
       struct pipe_info* pipep = filep->pipe;
+
+      if((int)pipep->buffer_offset + (int)count > 4*1024){
+        // printk("Pipe Memory write error\n" );
+        return -ENOMEM;
+      }
 
       int n_iter = string_length(buff) < count? string_length(buff) : count;
       for(int i=0; i<n_iter; i++){
@@ -130,7 +157,7 @@ int pipe_write(struct file *filep, char *buff, u32 count)
 
         written_bytes +=1;
       }
-      
+
       pipep->pipe_buff[pipep->write_pos] = '\0';
 
 
@@ -191,11 +218,23 @@ int create_pipe(struct exec_context *current, int *fd)
 
     //attaching file with read and write file descriptor
     fd[0] = find_free_fd_pipe(current);
+    if(fd[0]>=MAX_OPEN_FILES){
+      free_file_object_2(read_filep);
+      free_file_object_2(write_filep);
+      free_pipe_info(pipep);
+      return -EINVAL;
+    }
     current->files[fd[0]] = read_filep;
     pipep->is_ropen = 1;
     read_filep->ref_count +=1;
 
     fd[1] = find_free_fd_pipe(current);
+    if(fd[1]>=MAX_OPEN_FILES){
+      free_file_object_2(read_filep);
+      free_file_object_2(write_filep);
+      free_pipe_info(pipep);
+      return -EINVAL;
+    }
     current->files[fd[1]] = write_filep;
     pipep->is_wopen = 1;
     write_filep->ref_count +=1;
@@ -217,4 +256,3 @@ int create_pipe(struct exec_context *current, int *fd)
 
     return success;
 }
-
